@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG to PNG Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>SVG to PNG Converter</h1>
+    <p>This tool converts the generated SVG icons to PNG format for Tauri.</p>
+    
+    <button onclick="convertAll()">Convert All SVGs to PNGs</button>
+    <div id="status"></div>
+
+    <script>
+        const sizes = [32, 128, 256];
+        const squareSizes = [30, 44, 71, 89, 107, 142, 150, 284, 310];
+
+        function svgToPng(svgContent, width, height) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                const svgBlob = new Blob([svgContent], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(svgBlob);
+                
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    canvas.toBlob((blob) => {
+                        URL.revokeObjectURL(url);
+                        resolve(blob);
+                    }, 'image/png');
+                };
+                
+                img.src = url;
+            });
+        }
+
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        async function convertAll() {
+            const status = document.getElementById('status');
+            status.innerHTML = 'Converting...';
+            
+            try {
+                // Note: This script needs to be run from the project root
+                // and you'll need to load the SVG files from the server
+                // For now, this is a template that shows the approach
+                
+                status.innerHTML = `
+                    <p>To convert the SVGs to PNGs, you can:</p>
+                    <ol>
+                        <li>Use the Node.js script with sharp: <code>pnpm install && pnpm generate-icons</code></li>
+                        <li>Use ImageMagick: <code>magick icon.svg -resize 256x256 icon.png</code></li>
+                        <li>Use an online converter like cloudconvert.com</li>
+                    </ol>
+                    <p>The SVG files have been created at: <code>src-tauri/icons/*.svg</code></p>
+                `;
+            } catch (error) {
+                status.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
