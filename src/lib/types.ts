@@ -30,6 +30,8 @@ export interface MarketData {
   buyPrice: number;
   sellOrderCount: number;
   buyOrderCount: number;
+  sellPrice95Ci: number;
+  buyPrice95Ci: number;
 }
 
 export interface CalculatedData {

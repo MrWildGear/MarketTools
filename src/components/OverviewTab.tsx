@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Label } from './ui/label';
 import { Switch } from './ui/switch';
 import { MarketData, Profile } from '@/lib/types';
-import { calculateProfit, formatISK, formatPercent } from '@/lib/calculations';
+import { calculateProfit, formatISK, formatPercent, roundTo4SigFigs } from '@/lib/calculations';
 import { cn } from '@/lib/utils';
 import { Copy, Check } from 'lucide-react';
 import { useState } from 'react';
@@ -52,19 +52,23 @@ export function OverviewTab({ marketData, profile }: OverviewTabProps) {
       let priceToCopy: string;
       switch (autoCopyMode) {
         case 'sell':
-          priceToCopy = (marketData.sellPrice - 0.01).toFixed(2);
+          priceToCopy = roundTo4SigFigs(marketData.sellPrice - 0.01);
           break;
         case 'buy':
-          priceToCopy = (marketData.buyPrice + 0.01).toFixed(2);
+          priceToCopy = roundTo4SigFigs(marketData.buyPrice + 0.01);
           break;
         case 'sell95':
-          priceToCopy = (marketData.sellPrice * 0.95).toFixed(2);
+          priceToCopy = marketData.sellPrice95Ci >= 0 
+            ? roundTo4SigFigs(marketData.sellPrice95Ci)
+            : roundTo4SigFigs(marketData.sellPrice - 0.01);
           break;
         case 'buy95':
-          priceToCopy = (marketData.buyPrice * 0.95).toFixed(2);
+          priceToCopy = marketData.buyPrice95Ci >= 0
+            ? roundTo4SigFigs(marketData.buyPrice95Ci)
+            : roundTo4SigFigs(marketData.buyPrice + 0.01);
           break;
         default:
-          priceToCopy = (marketData.sellPrice - 0.01).toFixed(2);
+          priceToCopy = roundTo4SigFigs(marketData.sellPrice - 0.01);
       }
       handleCopy(priceToCopy);
     }
@@ -91,7 +95,7 @@ export function OverviewTab({ marketData, profile }: OverviewTabProps) {
               className="cursor-pointer text-lg font-bold hover:opacity-80"
               onClick={() => {
                 if (marketData) {
-                  handleCopy((marketData.sellPrice - 0.01).toFixed(2));
+                  handleCopy(roundTo4SigFigs(marketData.sellPrice - 0.01));
                 }
               }}
             >
@@ -116,7 +120,7 @@ export function OverviewTab({ marketData, profile }: OverviewTabProps) {
               className="cursor-pointer text-lg font-bold hover:opacity-80"
               onClick={() => {
                 if (marketData) {
-                  handleCopy((marketData.buyPrice + 0.01).toFixed(2));
+                  handleCopy(roundTo4SigFigs(marketData.buyPrice + 0.01));
                 }
               }}
             >
@@ -228,6 +232,7 @@ export function OverviewTab({ marketData, profile }: OverviewTabProps) {
             <RadioGroup
               value={autoCopyMode}
               onValueChange={(value) => setAutoCopyMode(value as 'sell' | 'buy' | 'sell95' | 'buy95')}
+              className="grid grid-cols-2 gap-3"
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="sell" id="sell" />

@@ -9,6 +9,8 @@ pub struct MarketData {
     pub buy_price: f64,
     pub sell_order_count: usize,
     pub buy_order_count: usize,
+    pub sell_price_95_ci: f64,
+    pub buy_price_95_ci: f64,
 }
 
 const HUB_IDS: [f64; 5] = [60003760.0, 60004588.0, 60008494.0, 60011866.0, 60005686.0];
@@ -94,6 +96,56 @@ fn filter_orders_by_range(
         .collect()
 }
 
+fn calculate_mean(prices: &[f64]) -> f64 {
+    if prices.is_empty() {
+        return 0.0;
+    }
+    prices.iter().sum::<f64>() / prices.len() as f64
+}
+
+fn calculate_std_dev(prices: &[f64], mean: f64) -> f64 {
+    if prices.len() < 2 {
+        return 0.0;
+    }
+    let variance = prices
+        .iter()
+        .map(|&price| (price - mean).powi(2))
+        .sum::<f64>() / (prices.len() - 1) as f64;
+    variance.sqrt()
+}
+
+fn calculate_95_ci_lower(prices: &[f64]) -> f64 {
+    if prices.is_empty() {
+        return -1.0;
+    }
+    if prices.len() == 1 {
+        return prices[0];
+    }
+    let mean = calculate_mean(prices);
+    let std_dev = calculate_std_dev(prices, mean);
+    let n = prices.len() as f64;
+    let standard_error = std_dev / n.sqrt();
+    // Z-score for 95% confidence is 1.96
+    let z_score = 1.96;
+    mean - (z_score * standard_error)
+}
+
+fn calculate_95_ci_upper(prices: &[f64]) -> f64 {
+    if prices.is_empty() {
+        return -1.0;
+    }
+    if prices.len() == 1 {
+        return prices[0];
+    }
+    let mean = calculate_mean(prices);
+    let std_dev = calculate_std_dev(prices, mean);
+    let n = prices.len() as f64;
+    let standard_error = std_dev / n.sqrt();
+    // Z-score for 95% confidence is 1.96
+    let z_score = 1.96;
+    mean + (z_score * standard_error)
+}
+
 pub fn parse_market_log(csv_content: &str, buy_range: u8, sell_range: u8) -> Option<MarketData> {
     let mut reader = csv::ReaderBuilder::new()
         .has_headers(false)
@@ -150,6 +202,24 @@ pub fn parse_market_log(csv_content: &str, buy_range: u8, sell_range: u8) -> Opt
         .max_by(|a, b| a.partial_cmp(b).unwrap())
         .unwrap_or(-1.0);
 
+    // Calculate 95% confidence interval prices
+    let sell_prices: Vec<f64> = sell_orders.iter().map(|o| o.price).collect();
+    let buy_prices: Vec<f64> = buy_orders.iter().map(|o| o.price).collect();
+    
+    // For sell orders, use lower bound of CI (to avoid undercuts)
+    let sell_price_95_ci = if sell_prices.is_empty() {
+        -1.0
+    } else {
+        calculate_95_ci_lower(&sell_prices)
+    };
+    
+    // For buy orders, use upper bound of CI (to avoid price hikes)
+    let buy_price_95_ci = if buy_prices.is_empty() {
+        -1.0
+    } else {
+        calculate_95_ci_upper(&buy_prices)
+    };
+
     Some(MarketData {
         item_name,
         type_id,
@@ -157,6 +227,8 @@ pub fn parse_market_log(csv_content: &str, buy_range: u8, sell_range: u8) -> Opt
         buy_price,
         sell_order_count: sell_orders.len(),
         buy_order_count: buy_orders.len(),
+        sell_price_95_ci,
+        buy_price_95_ci,
     })
 }
 

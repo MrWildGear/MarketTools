@@ -97,3 +97,56 @@ export function formatPercent(value: number): string {
     maximumFractionDigits: 2,
   })}%`;
 }
+
+/**
+ * Rounds a price to 4 significant figures according to EVE Online's tick size rules.
+ * This prevents arbitrary undercutting and ensures prices conform to the game's market order precision limits.
+ * 
+ * @param price - The price to round
+ * @returns A string representation of the price rounded to 4 significant figures
+ * 
+ * @example
+ * roundTo4SigFigs(1234567.89) // "1235000"
+ * roundTo4SigFigs(123.456) // "123.5"
+ * roundTo4SigFigs(0.123456) // "0.1235"
+ */
+export function roundTo4SigFigs(price: number): string {
+  if (price === 0) {
+    return '0';
+  }
+
+  // Handle negative numbers
+  const isNegative = price < 0;
+  const absPrice = Math.abs(price);
+
+  // Calculate the order of magnitude
+  const magnitude = Math.floor(Math.log10(absPrice));
+  
+  // Calculate the factor to round to 4 significant figures
+  // For magnitude 6, we want to round to nearest 1000 (10^3), so factor = 10^(magnitude - 3)
+  const factor = Math.pow(10, magnitude - 3);
+  
+  // Round to 4 significant figures
+  const rounded = Math.round(absPrice / factor) * factor;
+
+  // Format the number: use scientific notation to determine decimal places needed
+  // Then convert back to standard notation
+  const sign = isNegative ? '-' : '';
+  
+  // Calculate how many decimal places are needed to show 4 significant figures
+  // If magnitude >= 3, no decimals needed (e.g., 1235000)
+  // If magnitude >= 0, need (4 - magnitude - 1) decimal places (e.g., 123.5 needs 1)
+  // If magnitude < 0, need (4 - magnitude - 1) decimal places (e.g., 0.1235 needs 4)
+  let decimalPlaces: number;
+  if (magnitude >= 3) {
+    decimalPlaces = 0;
+  } else {
+    decimalPlaces = Math.max(0, 4 - magnitude - 1);
+  }
+  
+  // Format with appropriate decimal places
+  const formatted = rounded.toFixed(decimalPlaces);
+  
+  // Remove trailing zeros after decimal point, but keep the decimal point if there are significant digits
+  return sign + formatted.replace(/\.?0+$/, '');
+}
