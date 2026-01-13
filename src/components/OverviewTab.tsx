@@ -148,18 +148,20 @@ export function OverviewTab({
             </div>
             {marketData && marketData.sellPrice >= 0 && (
               <div className="text-sm text-muted-foreground mt-2 space-y-1">
-                <div>
-                  {marketData.sellOrderCount} order{marketData.sellOrderCount !== 1 ? 's' : ''}
+                <div className="flex gap-2">
+                  <span>
+                    {marketData.sellOrderCount} order{marketData.sellOrderCount !== 1 ? 's' : ''}
+                  </span>
+                  {marketData.sellTotalQuantity > 0 && (
+                    <span>
+                      {formatQuantity(marketData.sellTotalQuantity)} units
+                    </span>
+                  )}
                 </div>
                 {marketData.sellTotalQuantity > 0 && (
-                  <>
-                    <div>
-                      {formatQuantity(marketData.sellTotalQuantity)} units
-                    </div>
-                    <div>
-                      {formatISK(marketData.sellTotalIskValue)}
-                    </div>
-                  </>
+                  <div>
+                    {formatISK(marketData.sellTotalIskValue)}
+                  </div>
                 )}
               </div>
             )}
@@ -185,18 +187,20 @@ export function OverviewTab({
             </div>
             {marketData && marketData.buyPrice >= 0 && (
               <div className="text-sm text-muted-foreground mt-2 space-y-1">
-                <div>
-                  {marketData.buyOrderCount} order{marketData.buyOrderCount !== 1 ? 's' : ''}
+                <div className="flex gap-2">
+                  <span>
+                    {marketData.buyOrderCount} order{marketData.buyOrderCount !== 1 ? 's' : ''}
+                  </span>
+                  {marketData.buyTotalQuantity > 0 && (
+                    <span>
+                      {formatQuantity(marketData.buyTotalQuantity)} units
+                    </span>
+                  )}
                 </div>
                 {marketData.buyTotalQuantity > 0 && (
-                  <>
-                    <div>
-                      {formatQuantity(marketData.buyTotalQuantity)} units
-                    </div>
-                    <div>
-                      {formatISK(marketData.buyTotalIskValue)}
-                    </div>
-                  </>
+                  <div>
+                    {formatISK(marketData.buyTotalIskValue)}
+                  </div>
                 )}
               </div>
             )}

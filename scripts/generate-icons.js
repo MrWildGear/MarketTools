@@ -1,4 +1,4 @@
-// Simple script to generate placeholder icons for Elinor Reloaded
+// Simple script to generate placeholder icons for Market Toolbox
 // Requires: sharp package (install with: pnpm install -D sharp)
 // Then run: pnpm generate-icons
 
@@ -14,12 +14,12 @@ const __dirname = path.dirname(__filename);
 const iconDir = path.join(__dirname, '../src-tauri/icons');
 const sizes = [32, 128, 256];
 
-// Create SVG icon (simple square with "E" for Elinor)
+// Create SVG icon (simple square with "M" for Market Toolbox)
 const svgIcon = `
 <svg width="256" height="256" xmlns="http://www.w3.org/2000/svg">
   <rect width="256" height="256" fill="#3b82f6" rx="32"/>
   <text x="128" y="180" font-family="Arial, sans-serif" font-size="180" font-weight="bold" 
-        fill="white" text-anchor="middle" dominant-baseline="middle">E</text>
+        fill="white" text-anchor="middle" dominant-baseline="middle">M</text>
 </svg>`;
 
 async function generateIcons() {

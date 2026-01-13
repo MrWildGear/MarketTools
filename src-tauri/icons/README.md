@@ -51,7 +51,7 @@ For ICNS files (macOS), you'll need additional tools like `iconutil` or online c
 
 The placeholder icons feature:
 - Blue gradient background (#3b82f6 to #2563eb)
-- White "E" letter in the center (for Elinor)
+- White "M" letter in the center (for Market Toolbox)
 - Rounded corners
 
 You can customize the design by editing the SVG files or the generation scripts.

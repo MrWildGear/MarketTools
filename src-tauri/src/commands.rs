@@ -82,6 +82,14 @@ pub struct AppSettingsDto {
     pub selected_profile: String,
     pub auto_copy_enabled: bool,
     pub auto_copy_mode: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window_x: Option<i32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window_y: Option<i32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window_width: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window_height: Option<u32>,
 }
 
 impl From<AppSettings> for AppSettingsDto {
@@ -90,6 +98,10 @@ impl From<AppSettings> for AppSettingsDto {
             selected_profile: settings.selected_profile,
             auto_copy_enabled: settings.auto_copy_enabled,
             auto_copy_mode: settings.auto_copy_mode,
+            window_x: settings.window_x,
+            window_y: settings.window_y,
+            window_width: settings.window_width,
+            window_height: settings.window_height,
         }
     }
 }
@@ -100,6 +112,10 @@ impl From<AppSettingsDto> for AppSettings {
             selected_profile: dto.selected_profile,
             auto_copy_enabled: dto.auto_copy_enabled,
             auto_copy_mode: dto.auto_copy_mode,
+            window_x: dto.window_x,
+            window_y: dto.window_y,
+            window_width: dto.window_width,
+            window_height: dto.window_height,
         }
     }
 }

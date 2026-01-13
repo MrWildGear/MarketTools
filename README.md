@@ -1,4 +1,4 @@
-# Elinor Reloaded
+# Market Toolbox
 
 A modern trading tool for EVE Online, rebuilt with Tauri + React + TypeScript.
 

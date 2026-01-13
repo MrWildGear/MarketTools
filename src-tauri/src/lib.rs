@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::Manager;
 use tokio::sync::RwLock;
+use crate::settings::AppSettings;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -38,6 +39,24 @@ pub fn run() {
             std::fs::create_dir_all(&profiles_dir.join("profiles"))
                 .expect("Failed to create profiles directory");
 
+            // Restore window state
+            if let Some(window) = app.get_webview_window("main") {
+                restore_window_state(&window, &profiles_dir);
+            }
+
+            // Set up window event listener to save window state on close
+            let app_handle = app.handle().clone();
+            if let Some(window) = app.get_webview_window("main") {
+                let app_handle_clone = app_handle.clone();
+                window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { .. } = event {
+                        if let Some(win) = app_handle_clone.get_webview_window("main") {
+                            save_window_state(&win, &app_handle_clone);
+                        }
+                    }
+                });
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -51,6 +70,37 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+fn restore_window_state(window: &tauri::WebviewWindow, app_data_dir: &PathBuf) {
+    if let Ok(settings) = AppSettings::load(app_data_dir) {
+        if let (Some(x), Some(y)) = (settings.window_x, settings.window_y) {
+            let pos = tauri::PhysicalPosition::new(x, y);
+            let _ = window.set_position(pos);
+        }
+        if let (Some(width), Some(height)) = (settings.window_width, settings.window_height) {
+            let size = tauri::PhysicalSize::new(width, height);
+            let _ = window.set_size(size);
+        }
+    }
+}
+
+fn save_window_state(window: &tauri::WebviewWindow, app: &tauri::AppHandle) {
+    if let Ok(app_data_dir) = app.path().app_data_dir() {
+        let mut settings = AppSettings::load(&app_data_dir).unwrap_or_else(|_| AppSettings::default());
+        
+        if let Ok(pos) = window.outer_position() {
+            settings.window_x = Some(pos.x);
+            settings.window_y = Some(pos.y);
+        }
+        
+        if let Ok(size) = window.outer_size() {
+            settings.window_width = Some(size.width);
+            settings.window_height = Some(size.height);
+        }
+        
+        let _ = settings.save(&app_data_dir);
+    }
 }
 
 fn get_default_log_dir() -> PathBuf {

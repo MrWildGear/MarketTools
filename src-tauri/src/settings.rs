@@ -7,6 +7,14 @@ pub struct AppSettings {
     pub selected_profile: String,
     pub auto_copy_enabled: bool,
     pub auto_copy_mode: String, // "sell" | "buy" | "sell95" | "buy95"
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window_x: Option<i32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window_y: Option<i32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window_width: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window_height: Option<u32>,
 }
 
 impl AppSettings {
@@ -15,6 +23,10 @@ impl AppSettings {
             selected_profile: "Default".to_string(),
             auto_copy_enabled: false,
             auto_copy_mode: "sell".to_string(),
+            window_x: None,
+            window_y: None,
+            window_width: None,
+            window_height: None,
         }
     }
 

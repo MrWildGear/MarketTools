@@ -58,7 +58,7 @@ export function StatusBar({ status }: StatusBarProps) {
         >
           <Folder className="h-4 w-4" />
         </Button>
-        <Button size="sm" variant="ghost" title="About Elinor">
+        <Button size="sm" variant="ghost" title="This project was inspred by Elinor-Reloaded">
           <HelpCircle className="h-4 w-4" />
         </Button>
       </div>

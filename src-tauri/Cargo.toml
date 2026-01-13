@@ -1,12 +1,12 @@
 [package]
-name = "elinor_reloaded"
+name = "market_toolbox"
 version = "1.0.0"
 description = "Trading tool for Eve Online"
 authors = ["you"]
 edition = "2021"
 
 [lib]
-name = "elinor_reloaded_lib"
+name = "market_toolbox_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

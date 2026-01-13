@@ -1,6 +1,6 @@
 # Icon Generation
 
-This directory contains scripts to generate placeholder icons for Elinor Reloaded.
+This directory contains scripts to generate placeholder icons for Market Toolbox.
 
 ## Using Node.js with Sharp (Recommended)
 
@@ -25,7 +25,7 @@ If the scripts don't work, you can manually create icons:
 
 1. Create a simple icon image (256x256px) with:
    - Blue background (#3b82f6)
-   - White "E" letter in the center
+   - White "M" letter in the center
    - Rounded corners
 
 2. Save/export to these locations:
