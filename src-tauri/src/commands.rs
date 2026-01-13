@@ -1,4 +1,5 @@
 use crate::profile::Profile;
+use crate::settings::AppSettings;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -67,6 +68,58 @@ fn get_profiles_dir(app: &AppHandle) -> Result<std::path::PathBuf, String> {
     app.path()
         .app_data_dir()
         .map_err(|e| format!("Failed to get app data directory: {}", e))
+}
+
+fn get_app_data_dir(app: &AppHandle) -> Result<std::path::PathBuf, String> {
+    app.path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to get app data directory: {}", e))
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppSettingsDto {
+    pub selected_profile: String,
+    pub auto_copy_enabled: bool,
+    pub auto_copy_mode: String,
+}
+
+impl From<AppSettings> for AppSettingsDto {
+    fn from(settings: AppSettings) -> Self {
+        AppSettingsDto {
+            selected_profile: settings.selected_profile,
+            auto_copy_enabled: settings.auto_copy_enabled,
+            auto_copy_mode: settings.auto_copy_mode,
+        }
+    }
+}
+
+impl From<AppSettingsDto> for AppSettings {
+    fn from(dto: AppSettingsDto) -> Self {
+        AppSettings {
+            selected_profile: dto.selected_profile,
+            auto_copy_enabled: dto.auto_copy_enabled,
+            auto_copy_mode: dto.auto_copy_mode,
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn load_settings(app: AppHandle) -> Result<AppSettingsDto, String> {
+    let app_data_dir = get_app_data_dir(&app)?;
+    let settings = AppSettings::load(&app_data_dir)
+        .map_err(|e| format!("Failed to load settings: {}", e))?;
+    Ok(AppSettingsDto::from(settings))
+}
+
+#[tauri::command]
+pub async fn save_settings(app: AppHandle, settings: AppSettingsDto) -> Result<(), String> {
+    let app_data_dir = get_app_data_dir(&app)?;
+    let settings_rust: AppSettings = settings.into();
+    settings_rust
+        .save(&app_data_dir)
+        .map_err(|e| format!("Failed to save settings: {}", e))?;
+    Ok(())
 }
 
 #[tauri::command]

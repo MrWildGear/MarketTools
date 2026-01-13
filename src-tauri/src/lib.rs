@@ -2,6 +2,7 @@ mod commands;
 mod file_watcher;
 mod market_parser;
 mod profile;
+mod settings;
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -45,6 +46,8 @@ pub fn run() {
             commands::save_profile,
             commands::delete_profile,
             commands::select_log_path,
+            commands::load_settings,
+            commands::save_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

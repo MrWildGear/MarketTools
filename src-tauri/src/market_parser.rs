@@ -11,6 +11,10 @@ pub struct MarketData {
     pub buy_order_count: usize,
     pub sell_price_95_ci: f64,
     pub buy_price_95_ci: f64,
+    pub sell_total_quantity: f64,
+    pub buy_total_quantity: f64,
+    pub sell_total_isk_value: f64,
+    pub buy_total_isk_value: f64,
 }
 
 const HUB_IDS: [f64; 5] = [60003760.0, 60004588.0, 60008494.0, 60011866.0, 60005686.0];
@@ -38,6 +42,7 @@ impl From<u8> for OrderRange {
 
 pub struct OrderRow {
     price: f64,
+    quantity: f64,
     is_buy_order: bool,
     location_id: f64,
     jumps: i32,
@@ -59,6 +64,7 @@ fn parse_csv_row(row: &csv::StringRecord) -> Option<OrderRow> {
     }
 
     let price = row.get(0)?.parse::<f64>().ok()?;
+    let quantity = row.get(1)?.parse::<f64>().ok().unwrap_or(0.0);
     let is_buy_order = row.get(7)?.eq_ignore_ascii_case("true");
     let location_id = row.get(10)?.parse::<f64>().ok()?;
     let jumps = row.get(13)?.parse::<i32>().ok()?;
@@ -66,6 +72,7 @@ fn parse_csv_row(row: &csv::StringRecord) -> Option<OrderRow> {
 
     Some(OrderRow {
         price,
+        quantity,
         is_buy_order,
         location_id,
         jumps,
@@ -220,6 +227,14 @@ pub fn parse_market_log(csv_content: &str, buy_range: u8, sell_range: u8) -> Opt
         calculate_95_ci_upper(&buy_prices)
     };
 
+    // Calculate total quantity and ISK value for sell orders
+    let sell_total_quantity: f64 = sell_orders.iter().map(|o| o.quantity).sum();
+    let sell_total_isk_value: f64 = sell_orders.iter().map(|o| o.price * o.quantity).sum();
+
+    // Calculate total quantity and ISK value for buy orders
+    let buy_total_quantity: f64 = buy_orders.iter().map(|o| o.quantity).sum();
+    let buy_total_isk_value: f64 = buy_orders.iter().map(|o| o.price * o.quantity).sum();
+
     Some(MarketData {
         item_name,
         type_id,
@@ -229,6 +244,10 @@ pub fn parse_market_log(csv_content: &str, buy_range: u8, sell_range: u8) -> Opt
         buy_order_count: buy_orders.len(),
         sell_price_95_ci,
         buy_price_95_ci,
+        sell_total_quantity,
+        buy_total_quantity,
+        sell_total_isk_value,
+        buy_total_isk_value,
     })
 }
 

@@ -18,6 +18,9 @@ interface MainWindowProps {
   onProfileChange: (profileName: string) => void;
   onProfileUpdate: (profile: Profile) => void;
   onSaveProfile: () => void;
+  autoCopyEnabled: boolean;
+  autoCopyMode: 'sell' | 'buy' | 'sell95' | 'buy95';
+  onAutoCopyChange: (enabled: boolean, mode?: 'sell' | 'buy' | 'sell95' | 'buy95') => void;
 }
 
 export function MainWindow({
@@ -28,6 +31,9 @@ export function MainWindow({
   onProfileChange,
   onProfileUpdate,
   onSaveProfile,
+  autoCopyEnabled,
+  autoCopyMode,
+  onAutoCopyChange,
 }: MainWindowProps) {
   const [currentTab, setCurrentTab] = useState('overview');
 
@@ -61,7 +67,13 @@ export function MainWindow({
           </div>
 
           <TabsContent value="overview" className="m-0 h-[calc(100vh-200px)]">
-            <OverviewTab marketData={marketData} profile={profile} />
+            <OverviewTab 
+              marketData={marketData} 
+              profile={profile}
+              autoCopyEnabled={autoCopyEnabled}
+              autoCopyMode={autoCopyMode}
+              onAutoCopyChange={onAutoCopyChange}
+            />
           </TabsContent>
 
           <TabsContent value="character" className="m-0 h-[calc(100vh-200px)]">

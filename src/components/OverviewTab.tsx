@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Label } from './ui/label';
 import { Switch } from './ui/switch';
 import { MarketData, Profile } from '@/lib/types';
-import { calculateProfit, formatISK, formatPercent, roundTo4SigFigs } from '@/lib/calculations';
+import { calculateProfit, formatISK, formatPercent, roundTo4SigFigs, formatQuantity } from '@/lib/calculations';
 import { cn } from '@/lib/utils';
 import { Copy, Check } from 'lucide-react';
 import { useState } from 'react';
@@ -14,12 +14,19 @@ import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 interface OverviewTabProps {
   marketData: MarketData | null;
   profile: Profile;
+  autoCopyEnabled: boolean;
+  autoCopyMode: 'sell' | 'buy' | 'sell95' | 'buy95';
+  onAutoCopyChange: (enabled: boolean, mode?: 'sell' | 'buy' | 'sell95' | 'buy95') => void;
 }
 
-export function OverviewTab({ marketData, profile }: OverviewTabProps) {
+export function OverviewTab({ 
+  marketData, 
+  profile,
+  autoCopyEnabled,
+  autoCopyMode,
+  onAutoCopyChange,
+}: OverviewTabProps) {
   const [copied, setCopied] = useState(false);
-  const [autoCopyEnabled, setAutoCopyEnabled] = useState(false);
-  const [autoCopyMode, setAutoCopyMode] = useState<'sell' | 'buy' | 'sell95' | 'buy95'>('sell');
 
   const calculated = useMemo(() => {
     if (!marketData) {
@@ -104,8 +111,20 @@ export function OverviewTab({ marketData, profile }: OverviewTabProps) {
                 : 'No orders in range'}
             </div>
             {marketData && marketData.sellPrice >= 0 && (
-              <div className="text-sm text-muted-foreground mt-2">
-                {marketData.sellOrderCount} order{marketData.sellOrderCount !== 1 ? 's' : ''}
+              <div className="text-sm text-muted-foreground mt-2 space-y-1">
+                <div>
+                  {marketData.sellOrderCount} order{marketData.sellOrderCount !== 1 ? 's' : ''}
+                </div>
+                {marketData.sellTotalQuantity > 0 && (
+                  <>
+                    <div>
+                      {formatQuantity(marketData.sellTotalQuantity)} units
+                    </div>
+                    <div>
+                      {formatISK(marketData.sellTotalIskValue)}
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </CardContent>
@@ -129,8 +148,20 @@ export function OverviewTab({ marketData, profile }: OverviewTabProps) {
                 : 'No orders in range'}
             </div>
             {marketData && marketData.buyPrice >= 0 && (
-              <div className="text-sm text-muted-foreground mt-2">
-                {marketData.buyOrderCount} order{marketData.buyOrderCount !== 1 ? 's' : ''}
+              <div className="text-sm text-muted-foreground mt-2 space-y-1">
+                <div>
+                  {marketData.buyOrderCount} order{marketData.buyOrderCount !== 1 ? 's' : ''}
+                </div>
+                {marketData.buyTotalQuantity > 0 && (
+                  <>
+                    <div>
+                      {formatQuantity(marketData.buyTotalQuantity)} units
+                    </div>
+                    <div>
+                      {formatISK(marketData.buyTotalIskValue)}
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </CardContent>
@@ -224,14 +255,14 @@ export function OverviewTab({ marketData, profile }: OverviewTabProps) {
             <Switch
               id="auto-copy"
               checked={autoCopyEnabled}
-              onCheckedChange={setAutoCopyEnabled}
+              onCheckedChange={(checked) => onAutoCopyChange(checked)}
             />
           </div>
 
           {autoCopyEnabled && (
             <RadioGroup
               value={autoCopyMode}
-              onValueChange={(value) => setAutoCopyMode(value as 'sell' | 'buy' | 'sell95' | 'buy95')}
+              onValueChange={(value) => onAutoCopyChange(true, value as 'sell' | 'buy' | 'sell95' | 'buy95')}
               className="grid grid-cols-2 gap-3"
             >
               <div className="flex items-center space-x-2">

@@ -88,6 +88,15 @@ export function formatISK(amount: number): string {
   })} ISK`;
 }
 
+export function formatQuantity(quantity: number): string {
+  if (quantity < 0) {
+    return '-';
+  }
+  return quantity.toLocaleString('en-US', {
+    maximumFractionDigits: 0,
+  });
+}
+
 export function formatPercent(value: number): string {
   if (Math.abs(value) >= 10000) {
     return value > 0 ? '∞%' : '-∞%';
