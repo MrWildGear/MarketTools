@@ -48,17 +48,17 @@ export function OverviewTab({
     
     switch (mode) {
       case 'sell':
-        return marketData.sellPrice >= 0 ? roundTo4SigFigs(marketData.sellPrice - 0.01) : null;
+        return marketData.sellPrice >= 0 ? roundTo4SigFigs(marketData.sellPrice - 0.01, false) : null;
       case 'buy':
-        return marketData.buyPrice >= 0 ? roundTo4SigFigs(marketData.buyPrice + 0.01) : null;
+        return marketData.buyPrice >= 0 ? roundTo4SigFigs(marketData.buyPrice + 0.01, true) : null;
       case 'sell95':
         return marketData.sellPrice95Ci >= 0 
-          ? roundTo4SigFigs(marketData.sellPrice95Ci)
-          : (marketData.sellPrice >= 0 ? roundTo4SigFigs(marketData.sellPrice - 0.01) : null);
+          ? roundTo4SigFigs(marketData.sellPrice95Ci, false)
+          : (marketData.sellPrice >= 0 ? roundTo4SigFigs(marketData.sellPrice - 0.01, false) : null);
       case 'buy95':
         return marketData.buyPrice95Ci >= 0
-          ? roundTo4SigFigs(marketData.buyPrice95Ci)
-          : (marketData.buyPrice >= 0 ? roundTo4SigFigs(marketData.buyPrice + 0.01) : null);
+          ? roundTo4SigFigs(marketData.buyPrice95Ci, true)
+          : (marketData.buyPrice >= 0 ? roundTo4SigFigs(marketData.buyPrice + 0.01, true) : null);
       default:
         return null;
     }
@@ -95,23 +95,23 @@ export function OverviewTab({
       let priceToCopy: string;
       switch (autoCopyMode) {
         case 'sell':
-          priceToCopy = roundTo4SigFigs(marketData.sellPrice - 0.01);
+          priceToCopy = roundTo4SigFigs(marketData.sellPrice - 0.01, false);
           break;
         case 'buy':
-          priceToCopy = roundTo4SigFigs(marketData.buyPrice + 0.01);
+          priceToCopy = roundTo4SigFigs(marketData.buyPrice + 0.01, true);
           break;
         case 'sell95':
           priceToCopy = marketData.sellPrice95Ci >= 0 
-            ? roundTo4SigFigs(marketData.sellPrice95Ci)
-            : roundTo4SigFigs(marketData.sellPrice - 0.01);
+            ? roundTo4SigFigs(marketData.sellPrice95Ci, false)
+            : roundTo4SigFigs(marketData.sellPrice - 0.01, false);
           break;
         case 'buy95':
           priceToCopy = marketData.buyPrice95Ci >= 0
-            ? roundTo4SigFigs(marketData.buyPrice95Ci)
-            : roundTo4SigFigs(marketData.buyPrice + 0.01);
+            ? roundTo4SigFigs(marketData.buyPrice95Ci, true)
+            : roundTo4SigFigs(marketData.buyPrice + 0.01, true);
           break;
         default:
-          priceToCopy = roundTo4SigFigs(marketData.sellPrice - 0.01);
+          priceToCopy = roundTo4SigFigs(marketData.sellPrice - 0.01, false);
       }
       handleCopy(priceToCopy);
     }
@@ -138,7 +138,7 @@ export function OverviewTab({
               className="cursor-pointer text-lg font-bold hover:opacity-80"
               onClick={() => {
                 if (marketData) {
-                  handleCopy(roundTo4SigFigs(marketData.sellPrice - 0.01));
+                  handleCopy(roundTo4SigFigs(marketData.sellPrice - 0.01, false));
                 }
               }}
             >
@@ -177,7 +177,7 @@ export function OverviewTab({
               className="cursor-pointer text-lg font-bold hover:opacity-80"
               onClick={() => {
                 if (marketData) {
-                  handleCopy(roundTo4SigFigs(marketData.buyPrice + 0.01));
+                  handleCopy(roundTo4SigFigs(marketData.buyPrice + 0.01, true));
                 }
               }}
             >

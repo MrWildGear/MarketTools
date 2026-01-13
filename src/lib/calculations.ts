@@ -112,14 +112,16 @@ export function formatPercent(value: number): string {
  * This prevents arbitrary undercutting and ensures prices conform to the game's market order precision limits.
  * 
  * @param price - The price to round
+ * @param roundUp - If true, rounds up (ceil) for buy orders. If false, rounds down (floor) for sell orders. Defaults to false.
  * @returns A string representation of the price rounded to 4 significant figures
  * 
  * @example
- * roundTo4SigFigs(1234567.89) // "1235000"
- * roundTo4SigFigs(123.456) // "123.5"
- * roundTo4SigFigs(0.123456) // "0.1235"
+ * roundTo4SigFigs(1234567.89) // "1234000" (rounded down)
+ * roundTo4SigFigs(1234567.89, true) // "1235000" (rounded up)
+ * roundTo4SigFigs(123.456) // "123.4"
+ * roundTo4SigFigs(0.123456) // "0.1234"
  */
-export function roundTo4SigFigs(price: number): string {
+export function roundTo4SigFigs(price: number, roundUp: boolean = false): string {
   if (price === 0) {
     return '0';
   }
@@ -135,8 +137,10 @@ export function roundTo4SigFigs(price: number): string {
   // For magnitude 6, we want to round to nearest 1000 (10^3), so factor = 10^(magnitude - 3)
   const factor = Math.pow(10, magnitude - 3);
   
-  // Round to 4 significant figures
-  const rounded = Math.round(absPrice / factor) * factor;
+  // Round to 4 significant figures: down (floor) for sell orders, up (ceil) for buy orders
+  const rounded = roundUp 
+    ? Math.ceil(absPrice / factor) * factor
+    : Math.floor(absPrice / factor) * factor;
 
   // Format the number: use scientific notation to determine decimal places needed
   // Then convert back to standard notation
@@ -156,6 +160,7 @@ export function roundTo4SigFigs(price: number): string {
   // Format with appropriate decimal places
   const formatted = rounded.toFixed(decimalPlaces);
   
-  // Remove trailing zeros after decimal point, but keep the decimal point if there are significant digits
-  return sign + formatted.replace(/\.?0+$/, '');
+  // Remove trailing zeros after decimal point only (not trailing zeros in whole numbers)
+  // This regex only matches if there's a decimal point followed by zeros
+  return sign + formatted.replace(/\.0+$/, '');
 }
