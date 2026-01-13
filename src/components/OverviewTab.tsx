@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+import { Button } from './ui/button';
 
 interface OverviewTabProps {
   marketData: MarketData | null;
@@ -27,6 +28,7 @@ export function OverviewTab({
   onAutoCopyChange,
 }: OverviewTabProps) {
   const [copied, setCopied] = useState(false);
+  const [copiedMode, setCopiedMode] = useState<string | null>(null);
 
   const calculated = useMemo(() => {
     if (!marketData) {
@@ -39,6 +41,40 @@ export function OverviewTab({
     await writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const getPriceForMode = (mode: 'sell' | 'buy' | 'sell95' | 'buy95'): string | null => {
+    if (!marketData) return null;
+    
+    switch (mode) {
+      case 'sell':
+        return marketData.sellPrice >= 0 ? roundTo4SigFigs(marketData.sellPrice - 0.01) : null;
+      case 'buy':
+        return marketData.buyPrice >= 0 ? roundTo4SigFigs(marketData.buyPrice + 0.01) : null;
+      case 'sell95':
+        return marketData.sellPrice95Ci >= 0 
+          ? roundTo4SigFigs(marketData.sellPrice95Ci)
+          : (marketData.sellPrice >= 0 ? roundTo4SigFigs(marketData.sellPrice - 0.01) : null);
+      case 'buy95':
+        return marketData.buyPrice95Ci >= 0
+          ? roundTo4SigFigs(marketData.buyPrice95Ci)
+          : (marketData.buyPrice >= 0 ? roundTo4SigFigs(marketData.buyPrice + 0.01) : null);
+      default:
+        return null;
+    }
+  };
+
+  const handleCopyMode = async (mode: 'sell' | 'buy' | 'sell95' | 'buy95') => {
+    const price = getPriceForMode(mode);
+    if (price) {
+      await writeText(price);
+      setCopiedMode(mode);
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+        setCopiedMode(null);
+      }, 2000);
+    }
   };
 
   const marginColorClass = useMemo(() => {
@@ -259,38 +295,96 @@ export function OverviewTab({
             />
           </div>
 
-          {autoCopyEnabled && (
-            <RadioGroup
-              value={autoCopyMode}
-              onValueChange={(value) => onAutoCopyChange(true, value as 'sell' | 'buy' | 'sell95' | 'buy95')}
-              className="grid grid-cols-2 gap-3"
-            >
+          <RadioGroup
+            value={autoCopyMode}
+            onValueChange={(value) => onAutoCopyChange(autoCopyEnabled, value as 'sell' | 'buy' | 'sell95' | 'buy95')}
+            className="grid grid-cols-2 gap-3"
+          >
+            <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="sell" id="sell" />
                 <Label htmlFor="sell" className="cursor-pointer">
                   Sell price
                 </Label>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleCopyMode('sell')}
+                disabled={!marketData || marketData.sellPrice < 0}
+                className="h-7 w-7 p-0"
+              >
+                {copied && copiedMode === 'sell' ? (
+                  <Check className="h-4 w-4 text-green-600" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="buy" id="buy" />
                 <Label htmlFor="buy" className="cursor-pointer">
                   Buy price
                 </Label>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleCopyMode('buy')}
+                disabled={!marketData || marketData.buyPrice < 0}
+                className="h-7 w-7 p-0"
+              >
+                {copied && copiedMode === 'buy' ? (
+                  <Check className="h-4 w-4 text-green-600" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="sell95" id="sell95" />
                 <Label htmlFor="sell95" className="cursor-pointer">
                   Sell price at 95%
                 </Label>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleCopyMode('sell95')}
+                disabled={!marketData}
+                className="h-7 w-7 p-0"
+              >
+                {copied && copiedMode === 'sell95' ? (
+                  <Check className="h-4 w-4 text-green-600" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="buy95" id="buy95" />
                 <Label htmlFor="buy95" className="cursor-pointer">
                   Buy price at 95%
                 </Label>
               </div>
-            </RadioGroup>
-          )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleCopyMode('buy95')}
+                disabled={!marketData}
+                className="h-7 w-7 p-0"
+              >
+                {copied && copiedMode === 'buy95' ? (
+                  <Check className="h-4 w-4 text-green-600" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </RadioGroup>
 
           {copied && (
             <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
