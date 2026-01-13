@@ -1,6 +1,6 @@
 import { Button } from './ui/button';
 import { Pin, HelpCircle, Folder } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/core';
 
@@ -11,11 +11,28 @@ interface StatusBarProps {
 export function StatusBar({ status }: StatusBarProps) {
   const [isPinned, setIsPinned] = useState(false);
 
+  useEffect(() => {
+    const initializePinState = async () => {
+      try {
+        const window = getCurrentWindow();
+        const currentState = await window.isAlwaysOnTop();
+        setIsPinned(currentState);
+      } catch (error) {
+        console.error('Failed to get always-on-top state:', error);
+      }
+    };
+    initializePinState();
+  }, []);
+
   const handlePin = async () => {
-    const window = getCurrentWindow();
-    const newState = !isPinned;
-    await window.setAlwaysOnTop(newState);
-    setIsPinned(newState);
+    try {
+      const window = getCurrentWindow();
+      const newState = !isPinned;
+      await window.setAlwaysOnTop(newState);
+      setIsPinned(newState);
+    } catch (error) {
+      console.error('Failed to set always-on-top:', error);
+    }
   };
 
   const handleChangeLogPath = async () => {
