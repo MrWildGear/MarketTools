@@ -2,7 +2,7 @@
 name = "market_toolbox"
 version = "1.0.1"
 description = "Trading tool for Eve Online"
-authors = ["you"]
+authors = ["ham Norris"]
 edition = "2021"
 
 [lib]
