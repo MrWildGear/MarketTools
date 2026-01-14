@@ -1,7 +1,9 @@
 use crate::profile::Profile;
 use crate::settings::AppSettings;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Emitter, Manager, State};
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -149,17 +151,40 @@ pub async fn list_profiles(app: AppHandle) -> Result<Vec<String>, String> {
 pub async fn load_profile(
     app: AppHandle,
     profile_name: String,
+    current_profile: State<'_, Arc<RwLock<Profile>>>,
 ) -> Result<Option<ProfileDto>, String> {
     let profiles_dir = get_profiles_dir(&app)?;
     let profile = Profile::load(&profiles_dir, &profile_name)
         .map_err(|e| format!("Failed to load profile: {}", e))?;
+    
+    // Update the managed profile state
+    *current_profile.write().await = profile.clone();
+    
     Ok(Some(ProfileDto::from(profile)))
 }
 
 #[tauri::command]
-pub async fn save_profile(app: AppHandle, profile: ProfileDto) -> Result<(), String> {
+pub async fn save_profile(
+    app: AppHandle, 
+    profile: ProfileDto,
+    current_profile: State<'_, Arc<RwLock<Profile>>>,
+) -> Result<(), String> {
     let profiles_dir = get_profiles_dir(&app)?;
     let profile_rust: Profile = profile.into();
+    
+    // Check if this is the currently selected profile by checking settings
+    let app_data_dir = get_app_data_dir(&app)?;
+    let is_current_profile = if let Ok(settings) = AppSettings::load(&app_data_dir) {
+        profile_rust.profile_name == settings.selected_profile
+    } else {
+        false
+    };
+    
+    // Update the managed profile state if this is the currently selected profile
+    if is_current_profile {
+        *current_profile.write().await = profile_rust.clone();
+    }
+    
     profile_rust
         .save(&profiles_dir)
         .map_err(|e| format!("Failed to save profile: {}", e))?;

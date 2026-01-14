@@ -9,6 +9,7 @@ use std::sync::Arc;
 use tauri::Manager;
 use tokio::sync::RwLock;
 use crate::settings::AppSettings;
+use crate::profile::Profile;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -22,14 +23,31 @@ pub fn run() {
             let log_dir = get_default_log_dir();
             let log_dir_arc = Arc::new(RwLock::new(log_dir.clone()));
 
+            // Initialize current profile state with default profile
+            let profiles_dir = app
+                .path()
+                .app_data_dir()
+                .expect("Failed to get app data directory");
+            let default_profile = Profile::default("Default".to_string());
+            let current_profile_arc = Arc::new(RwLock::new(default_profile));
+            
+            // Load the selected profile from settings if available
+            if let Ok(settings) = AppSettings::load(&profiles_dir) {
+                if let Ok(profile) = Profile::load(&profiles_dir, &settings.selected_profile) {
+                    *current_profile_arc.blocking_write() = profile;
+                }
+            }
+
             // Initialize file watcher
             let app_handle = app.handle().clone();
             let log_dir_for_watcher = log_dir_arc.clone();
+            let profile_for_watcher = current_profile_arc.clone();
             tauri::async_runtime::spawn(async move {
-                file_watcher::watch_market_logs(app_handle, log_dir_for_watcher).await;
+                file_watcher::watch_market_logs(app_handle, log_dir_for_watcher, profile_for_watcher).await;
             });
 
             app.manage(log_dir_arc);
+            app.manage(current_profile_arc);
 
             // Initialize profiles directory
             let profiles_dir = app

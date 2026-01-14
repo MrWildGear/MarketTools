@@ -1,4 +1,5 @@
 use crate::market_parser;
+use crate::profile::Profile;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::mpsc;
@@ -8,13 +9,10 @@ use tokio::sync::RwLock;
 use tokio::time::sleep;
 use notify::{Config, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 
-// For now, we use default ranges. In a full implementation, we'd load the current profile
-const DEFAULT_BUY_RANGE: u8 = 4; // REGION
-const DEFAULT_SELL_RANGE: u8 = 4; // REGION
-
 pub async fn watch_market_logs(
     app: AppHandle,
     log_dir: Arc<RwLock<PathBuf>>,
+    current_profile: Arc<RwLock<Profile>>,
 ) {
     loop {
         let current_dir = log_dir.read().await.clone();
@@ -85,9 +83,15 @@ pub async fn watch_market_logs(
                                         filename,
                                     );
 
-                                    // Use default ranges (in production, load from current profile)
+                                    // Get current profile ranges
+                                    let profile = current_profile.read().await;
+                                    let buy_range = profile.buy_range;
+                                    let sell_range = profile.sell_range;
+                                    drop(profile); // Release the lock
+
+                                    // Use profile ranges for filtering orders
                                     if let Some(mut market_data) =
-                                        market_parser::parse_market_log(&content, DEFAULT_BUY_RANGE, DEFAULT_SELL_RANGE)
+                                        market_parser::parse_market_log(&content, buy_range, sell_range)
                                     {
                                         let item_name_clone = item_name.clone();
                                         market_data.item_name = item_name;
